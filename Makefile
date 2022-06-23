@@ -3,11 +3,13 @@ clean:		## Attempt to clean up everything
 	make clean
 	cd ..
 	rm -rf awx
+	rm -rf postgres_local_data
 
 install:	## Install AWX Tower (free tier) from Github
 	bash ./install.sh
 
 awx_cli_docs:	## Launch AWX-CLI documentation (web-app)
+	pyenv activate awx_project
 	cd awx/awxkit/awxkit/cli/docs/build/html && python -m http.server
 
 prepare_pyenv:
