@@ -1,5 +1,5 @@
 - name: My first play
-  hosts: TEST-Host
+  hosts: guest*.tests.net
   tasks:
    - name: Ping my hosts
      ansible.builtin.ping:
