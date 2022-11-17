@@ -1,0 +1,14 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres:10.21-alpine3.16
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 'SECRET'
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./postgres_initdb:/docker-entrypoint-initdb.d
