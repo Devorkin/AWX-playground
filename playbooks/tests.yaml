@@ -1,0 +1,25 @@
+- name: K8s nodes dependecy checks
+  hosts: all
+  tasks:
+    - name: The mount point for '/', found using the Ansible mount facts, [-1] is the same as the 'last' filter
+      ansible.builtin.assert:
+        fail_msg: Disk size must be at least 20GB!
+        quiet: true
+        that: "{{ (ansible_facts.mounts | selectattr('mount', 'in', '/') | list | sort(attribute='mount'))[-1]['size_total'] }} > 20000000000"
+    - name: Product name
+      ansible.builtin.assert:
+        fail_msg: "This playbook was confirmed to work with VirtualBox as platform host, you might disable this test on your own risk!"
+        quiet: true
+        that: "{{ 'VirtualBox' in ansible_product_name }}"
+    - name: Distribution name
+      ansible.builtin.assert:
+        fail_msg: "This playbook was connfirmed to work with Ubuntu distro only!"
+        quiet: true
+        that: "{{ 'Ubuntu' in ansible_distribution }} "
+    - name: Distribution Release
+      ansible.builtin.assert:
+        fail_msg: "This playbook was connfirmed to work with Ubuntu Jammy release!, you might disable this test on your own risk!"
+        quiet: true
+        that:
+          - "{{ ansible_distribution_major_version | int <= 22 }}"
+          - "{{ ansible_distribution_major_version | int >= 22 }}"
