@@ -38,20 +38,20 @@ Vagrant.configure("2") do |config|
   end
 
   # Variables
-  NUM_OF_MACHINES = 2
+  NUM_OF_NODES = 3
   
   # Virtual machines
-  config.vm.define 'awx_server' do |awx_server|
-    awx_server.vm.network "private_network", ip: "192.168.58.110"
-    awx_server.vm.hostname = 'awx-server.tests.net'
+  config.vm.define 'awx_controller' do |awx_controller|
+    awx_controller.vm.network "private_network", ip: "192.168.58.110"
+    awx_controller.vm.hostname = 'awx-controller.tests.net'
     [5080, 5432].each do |port|
-      awx_server.vm.network "forwarded_port", guest: port, host: port, protocol: "tcp"
+      awx_controller.vm.network "forwarded_port", guest: port, host: port, protocol: "tcp"
     end
-    awx_server.vm.provision :shell, path: './vagrant_files/awx-server.sh', args: NUM_OF_MACHINES
+    awx_controller.vm.provision :shell, path: './vagrant_files/awx-server.sh', args: NUM_OF_NODES
   end
   
   
-  (1..NUM_OF_MACHINES).each do |i|
+  (1..NUM_OF_NODES).each do |i|
     config.vm.define "guest#{i}" do |guest|
       guest.vm.network "private_network", ip: "192.168.58.1#{i}"
       guest.vm.hostname = "guest#{i}.tests.net"
@@ -59,4 +59,3 @@ Vagrant.configure("2") do |config|
     end
   end
 end
-  

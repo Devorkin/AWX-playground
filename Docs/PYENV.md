@@ -60,8 +60,8 @@ Navigate to the path where you cloned this repo into
 pyenv install 3.9.15
 
 # Create new VirtualEnv
-pyenv virtualenv 3.9.15 awx-tower
+pyenv virtualenv 3.9.15 awx
 
 # Load the Virtualenv each time, before playing with this environment
-pyenv activate awx-tower
+pyenv activate awx
 ```

@@ -5,7 +5,7 @@ clean:				## Attempt to clean up everything
 	rm -rf awx
 	rm -rf postgres_local_data
 
-install:			## Install AWX Tower (free tier) from Github
+install:			## Install AWX project
 	bash -x ./install.sh
 
 awx_cli_docs:		## Launch AWX-CLI documentation (web-app)

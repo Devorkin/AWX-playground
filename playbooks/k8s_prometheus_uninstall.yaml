@@ -1,0 +1,22 @@
+- name: Prometheus installation
+  gather_facts: false
+  hosts: master
+  vars:
+    prometheus_jsonnet_path: '/opt/k8s/custom_resources/prometheus-jsonnet'
+  tasks:
+    - name: Reset Prometheus environment
+      block:
+        - name: Remove Prometheus pods
+          ansible.builtin.command:
+            chdir: "{{ prometheus_jsonnet_path }}"
+            cmd: kubectl delete -f manifests/
+          changed_when: true
+        - name: Remove Prometheus operator
+          ansible.builtin.command:
+            chdir: "{{ prometheus_jsonnet_path }}"
+            cmd: kubectl delete -f manifests/setup
+          changed_when: true
+        - name: Delete Jsonnet setup
+          ansible.builtin.file:
+            path: "{{ prometheus_jsonnet_path }}"
+            state: absent

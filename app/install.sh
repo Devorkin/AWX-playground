@@ -70,7 +70,9 @@ pip3 install -r requirements.txt
 
 # PostgreSQL setup [Optional]
 if [[ ${MODE} == 'EXTERNAL_DB' ]]; then
-    if [[ ${INSTALL_POSTGRESQL_INSTANCE} == "True" ]]; then docker-compose up -d fi
+    if [[ ${INSTALL_POSTGRESQL_INSTANCE} == "True" ]]; then 
+        docker-compose up -d
+    fi
 fi
 
 echo 'Importing Ansible AWX from Github...'
@@ -106,11 +108,11 @@ echo "Creating AWX initial configuration for $AWX_ORG environment..."
 awx organizations create --name $AWX_ORG
 awx inventory create --name $AWX_INVENTORY --organization $AWX_ORG
 awx groups create --name $AWX_HOSTS_GROUP --inventory $AWX_INVENTORY
-awx credentials create --name $AWX_MACHINE_SSH_CREDS --credential_type 'Machine' --organization $AWX_ORG --inputs "{\"username\": \"${SSH_USER}\", \"become_method\": \"sudo\", \"ssh_key_data\": \"@${SSH_PRIVATE_KEY_PATH}\"}"
+awx credentials create --name $AWX_MANAGED_NODES_SSH_CREDS --credential_type 'Machine' --organization $AWX_ORG --inputs "{\"username\": \"${SSH_USER}\", \"become_method\": \"sudo\", \"ssh_key_data\": \"@${SSH_PRIVATE_KEY_PATH}\"}"
 awx credentials create --name $AWX_SVC_SSH_CREDS --credential_type 'Source Control' --organization $AWX_ORG --inputs "{\"username\": \"${SCM_USER}\", \"ssh_key_data\": \"@${SCM_SSH_PRIVATE_KEY_PATH}\"}"
 
 # Retrieve the Credential ID created above - to use it also for SCM
-SSH_CREDS_ID=$(awx credentials list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep $AWX_MACHINE_SSH_CREDS | sed -En 's/^"([0-9]+) --.*"$/\1/p')
+SSH_CREDS_ID=$(awx credentials list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep $AWX_MANAGED_NODES_SSH_CREDS | sed -En 's/^"([0-9]+) --.*"$/\1/p')
 SCM_CREDS_ID=$(awx credentials list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep $AWX_SVC_SSH_CREDS | sed -En 's/^"([0-9]+) --.*"$/\1/p')
 
 awx project create --name $AWX_PROJECT --monitor --wait --organization $AWX_ORG --scm_type git --scm_url ${SCM_REPO_URL} --credential ${SCM_CREDS_ID}
@@ -128,11 +130,11 @@ You can access its UI via: http://127.0.0.1:$HOST_PORT (or use any other IP addr
 
 You can access AWX-CLI documentation by:
 - Navigate to \`cd ${pwd}/awxkit/awxkit/cli/docs/\`
-- If used PyEnv with this project, run \`pyenv activate awx_project\`
+- If using PyEnv with this project, run \`pyenv activate awx_project\`
 - Run \`[python3] -m http.server\`
 - In your browser browse to: http://127.0.0.1:8000 (or use any other IP address assigned to this system)
 
 Enjoy!
 """
 
-echo "=== Ansible AWX Tower is ready to be used at http://127.0.0.1:$HOST_PORT ==="
+echo "=== Ansible AWX is ready to be used at http://127.0.0.1:$HOST_PORT ==="

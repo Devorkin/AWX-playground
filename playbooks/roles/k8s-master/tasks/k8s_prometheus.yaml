@@ -1,0 +1,118 @@
+- name: Prometheus installation
+  hosts: master
+  vars:
+    go_modules: ["github.com/brancz/gojsontoyaml", "github.com/google/go-jsonnet/cmd/jsonnet", "github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb"]
+    prometheus_files: ['build.sh', 'example.jsonnet']
+    prometheus_jsonnet_path: '/opt/k8s/custom_resources/prometheus-jsonnet'
+  tasks:
+    - name: Collections & Tests
+      block:
+        - name: Check for Go modules existance
+          ansible.builtin.stat:
+            path: "$HOME/go/bin/{{ item | basename }}"
+          changed_when: false
+          register: go_modules_status
+          loop: "{{ go_modules }}"
+        - name: Check for jsonnetfile.json existance
+          ansible.builtin.stat:
+            path: "{{ prometheus_jsonnet_path }}/jsonnetfile.json"
+          changed_when: false
+          register: jsonnetfile
+        - name: Check for Monitoring namespace existance
+          ansible.builtin.command:
+            cmd: "kubectl get namespace monitoring"
+          changed_when: false
+          ignore_errors: true
+          register: monitoring
+        - name: Check for Prometheus pods existance
+          ansible.builtin.command:
+            cmd: kubectl get svc -n monitoring prometheus-k8s
+          changed_when: false
+          ignore_errors: true
+          register: prometheus_status
+        - name: Check if Kube-Prometheus vendor directory exists
+          ansible.builtin.stat:
+            path: "{{ prometheus_jsonnet_path }}/vendor"
+          changed_when: false
+          register: kube_prometheus_vendor
+
+    - name: Install Go module
+      ansible.builtin.command:
+        cmd: "go install {{ item.item }}@latest"
+      when: "not item.stat.exists"
+      loop: "{{ go_modules_status.results }}"
+    - name: Jsonnet setup
+      when: "not kube_prometheus_vendor.stat.exists"
+      block:
+        - name: Create a directory if it does not exist
+          ansible.builtin.file:
+            mode: 0755
+            path: "{{ prometheus_jsonnet_path }}"
+            state: directory
+        - name: JB Init
+          ansible.builtin.command:
+            chdir: "{{ prometheus_jsonnet_path }}"
+            cmd: /root/go/bin/jb init
+          when: "not jsonnetfile.stat.exists"
+        - name: Pull Kube-Prometheus jsonnet template
+          ansible.builtin.command:
+            chdir: "{{ prometheus_jsonnet_path }}"
+            cmd: /root/go/bin/jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@main
+          changed_when: true
+        - name: Check for Kube-prometheus jsonnet template existance
+          ansible.builtin.stat:
+            path: "{{ prometheus_jsonnet_path }}/{{ item }}"
+          changed_when: false
+          register: prometheus_jsonnet_template
+          loop: "{{ prometheus_files }}"
+
+    - name: Kube-Prometheus setup
+      when: "prometheus_status.rc == 1"
+      block:
+        - name: Download Kube-Prometheus configuration prometheus_files
+          ansible.builtin.get_url:
+            dest: "{{ prometheus_jsonnet_path }}/{{ item.item }}"
+            mode: 0644
+            url: "https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/main/{{ item.item }}"
+          when: "not item.stat.exists"
+          loop: "{{ prometheus_jsonnet_template.results }}"
+        - name: Enable node-ports
+          ansible.builtin.lineinfile:
+            backrefs: true
+            line: '  \g<1>'
+            regexp: ^.*(\(import 'kube-prometheus/addons/node-ports.libsonnet'\) \+)
+            path: "{{ prometheus_jsonnet_path }}/example.jsonnet"
+            state: present
+        - name: Disable Network policies
+          ansible.builtin.lineinfile:
+            insertafter: .*pyrra.libsonnet*.
+            line: "  (import 'kube-prometheus/addons/networkpolicies-disabled.libsonnet') +"
+            path: "{{ prometheus_jsonnet_path }}/example.jsonnet"
+            state: present
+        - name: Check if Manifests directory does already exists
+          ansible.builtin.stat:
+            path: "{{ prometheus_jsonnet_path }}/manifests"
+          changed_when: false
+          register: manifests
+        - name: Build Kube-Prometheus manifests setup
+          ansible.builtin.command:
+            chdir: "{{ prometheus_jsonnet_path }}"
+            cmd: bash ./build.sh
+          environment:
+            PATH: '/root/go/bin:{{ ansible_env.PATH }}'
+          when: "not manifests.stat.exists"
+        - name: Kubectl apply Kube-Prometheus operator
+          ansible.builtin.command:
+            chdir: "{{ prometheus_jsonnet_path }}"
+            cmd: kubectl apply --server-side -f manifests/setup
+          when: "monitoring.rc == 1"
+        - name: Wait for Kube-Prometheus operator to come up
+          ansible.builtin.command:
+            cmd: kubectl wait --for condition=Established --all CustomResourceDefinition --namespace=monitoring
+          changed_when: false
+          register: kubectl_apply_operator_status
+        - name: Kubectl apply all Kube-Prometheus manifests
+          ansible.builtin.command:
+            chdir: "{{ prometheus_jsonnet_path }}"
+            cmd: kubectl apply -f manifests/
+          when: "kubectl_apply_operator_status.rc == 0"

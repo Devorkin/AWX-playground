@@ -1,0 +1,11 @@
+- name: Install dependecies
+  import_tasks: k8s-baseline.yaml
+
+- name: Install Kubernetes with the Master role
+  import_tasks: k8s_master.yaml
+
+- name: Setup Kubernetes networking
+  import_tasks: k8s_netwok.yaml
+
+- name: Setup Kube-Prometheus
+  import_tasks: k8s_prometheus.yaml

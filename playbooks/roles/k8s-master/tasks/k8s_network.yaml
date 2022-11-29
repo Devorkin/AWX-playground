@@ -1,0 +1,57 @@
+- name: Kubernetes Network configuration
+  gather_facts: false
+  hosts: master
+  vars:
+    calico_override: false
+    calico_custom_resources_yaml: "/opt/k8s/custom_resources/calico/custom-resources.yaml"
+    k8s_pods_network_cidr: '10.100.100.0/24'
+  tasks:
+    - name: Collections & Tests
+      block:
+        - name: Check if Calico custom-resources.yaml already exists
+          ansible.builtin.stat:
+            path: "{{ calico_custom_resources_yaml }}"
+          changed_when: false
+          register: calico_custom_resources
+        - name: Check if Calico is already setup & running
+          ansible.builtin.command:
+            cmd: "kubectl get pods -n calico-system -l app.kubernetes.io/name=calico-node \
+              -o custom-columns=NAME:.metadata.name,NODE_NAME:.spec.nodeName,STATUS:.status.containerStatuses[].state"
+          changed_when: false
+          ignore_errors: true
+          register: calico_system_status
+        - name: Confirm Tigera operator pod existance
+          ansible.builtin.command:
+            cmd: kubectl get -n tigera-operator pods --no-headers=true
+          changed_when: false
+          ignore_errors: true
+          register: tigera_pod
+
+    - name: Calico network setup
+      when: "calico_system_status.stdout.find('calico') == -1 and calico_system_status.stdout.find('running') == -1"
+      block:
+        - name: Launch Tigera operator pod
+          ansible.builtin.command:
+            cmd: kubectl create -f https://projectcalico.docs.tigera.io/manifests/tigera-operator.yaml
+          when: "tigera_pod.stdout.find('tigera-operator') == -1"
+        - name: Create Calico directory
+          ansible.builtin.file:
+            mode: 0755
+            path: /opt/k8s/custom_resources/calico
+            state: directory
+        - name: Download Calico custom-resources.yaml
+          ansible.builtin.get_url:
+            dest: "{{ calico_custom_resources_yaml }}"
+            mode: 0644
+            url: https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
+        - name: Update CIDR subnet in Calico custom resources configuration file
+          ansible.builtin.lineinfile:
+            backrefs: true
+            line: \g<1>\g<2>{{ k8s_pods_network_cidr }}
+            path: "{{ calico_custom_resources_yaml }}"
+            regexp: '^(.*)(cidr: )192.168.0.0/16'
+            state: present
+        - name: Launch Calico setup
+          ansible.builtin.command:
+            cmd: "kubectl apply -f {{ calico_custom_resources_yaml }}"
+          when: "not calico_custom_resources.stat.exists"

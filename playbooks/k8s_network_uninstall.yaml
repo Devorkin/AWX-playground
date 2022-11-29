@@ -1,0 +1,18 @@
+- name: Kubernetes Network configuration
+  gather_facts: false
+  hosts: master
+  vars:
+    calico_custom_resources_yaml: "/opt/k8s/custom_resources/calico/custom-resources.yaml"
+  tasks:
+    - name: Delete Calico custom resources
+      ansible.builtin.command:
+        cmd: "kubectl delete -f {{ calico_custom_resources_yaml }}"
+      changed_when: true
+    - name: Delete Tigera operator pod
+      ansible.builtin.command:
+        cmd: kubectl delete -f https://projectcalico.docs.tigera.io/manifests/tigera-operator.yaml
+      changed_when: true
+    - name: Delete Calico custom-resources.yaml
+      ansible.builtin.file:
+        path: "{{ calico_custom_resources_yaml }}"
+        state: absent

@@ -14,7 +14,7 @@
   - Vagrant environment
     - This use a custom, pre-defined, SSH private key
       - Used to communicate with [this repo](https://github.com/Devorkin/AWX-playground) (Read-Only) via the <u>Deploy keys</u> functionality
-      - Used to access the AWX clients
+      - Used to access the AWX managed nodes
     - The default provider for this Vagrant playground is Virtualbox
 - If you'll choose to create and play with <u>your own</u> Ansible playbooks:
   - Consider to fork this repo OR create a new SCM repo just for the Ansible playbooks
@@ -47,7 +47,7 @@
 8. Use the <code>ADMIN_USER</code> & <code>ADMIN_PASSWORD</code> values from the <code>./app/.env</code> file to login into the AWX UI
 <br /><br /><br /><br /><br />
 ## Pre-configuration of the <code>Vagrantfile</code>
-- The <code>./Vagrantfile</code> has a variable <code>NUM_OF_MACHINES</code>, you can change it to any number of Ansible clients that you would like to play with
+- The <code>./Vagrantfile</code> has a variable <code>NUM_OF_NODES</code>, you can change it to any number of Ansible managed nodes that you would like to play with
 <br /><br />
 
 ## Pre-configuration of the <code>.env</code> file
@@ -63,10 +63,10 @@ For configuring the AWX system - these variables might be changed before running
   - <code>AWX_ORG</code>, should store the AWX instance name you would like to use; default: <code>Tests.net</code>
   - <code>ADMIN_PASSWORD</code>, define the <b>Admin</b> account password for the AWX web service; default: <code>secret</code>
   - <code>ADMIN_USER</code>, define the <b>Admin</b> account name for the AWX web service; default: <code>admin</code>
-  - <code>AWX_HOSTS_GROUP</code>, should store a name for the group of hosts that will contain the nodes that this playground should work with; default: <code>test_hosts</code>
+  - <code>AWX_HOSTS_GROUP</code>, should store a name for the group of hosts that will contain the nodes that this playground should work with; default: <code>Managed hosts</code>
   - <code>AWX_INVENTORY</code>, should store a name for the AWX Inventory that will store the nodes and group(s) used in this playground; default: <code>$AWX_ORG-inventory</code>
   - <code>AWX_PROJECT</code>, define where to look for Ansible playbooks; default: <code>Github</code>
-  - <code>AWX_MACHINE_SSH_CREDS</code>, define a name for the SSH private key that should be used to access the client nodes; default: <code>$AWX_ORG-MACHINE-SSH</code>
+  - <code>AWX_MANAGED_NODES_SSH_CREDS</code>, define a name for the SSH private key that should be used to access the managed nodes; default: <code>$AWX_ORG-NODES-SSH</code>
   - <code>AWX_SVC_SSH_CREDS</code>, define a name for the SSH private key that should be used to access Github; default: <code>$AWX_ORG-SVC-SSH</code>
   - <code>CONFIG_FILE</code>, set the path to the setting variables configuration file that the AWX installer use to setup the AWX system, <b>You should not change this</b>; default: <code>./awx/installer/inventory</code>
   - <code>HOST_PORT</code>, set the port that the AWX web instance will listen on; default: <code>5080</code>
@@ -80,5 +80,5 @@ For configuring the AWX system - these variables might be changed before running
   - <code>SCM_REPO_URL</code>, should define the URL to the Git repo that stores the Ansible playbooks that this playground should use
   - <code>SCM_SSH_PRIVATE_KEY_PATH</code>, set the path to the SSH private key used in the Github repo with the Ansible playbooks; default: <code>~/.ssh/id_rsa</code>
 - SSH
-  - <code>SSH_PRIVATE_KEY_PATH</code>, set the path to the SSH private key used to access the client nodes; default: <code>~/.ssh/id_rsa</code>
-  - <code>SSH_USER</code>, set the user name used to access the client nodes via SSH; default: <code>vagrant</code>
+  - <code>SSH_PRIVATE_KEY_PATH</code>, set the path to the SSH private key used to access the managed nodes; default: <code>~/.ssh/id_rsa</code>
+  - <code>SSH_USER</code>, set the user name used to access the managed nodes via SSH; default: <code>vagrant</code>
