@@ -63,7 +63,7 @@ For configuring the AWX system - these variables might be changed before running
   - <code>AWX_ORG</code>, should store the AWX instance name you would like to use; default: <code>Tests.net</code>
   - <code>ADMIN_PASSWORD</code>, define the <b>Admin</b> account password for the AWX web service; default: <code>secret</code>
   - <code>ADMIN_USER</code>, define the <b>Admin</b> account name for the AWX web service; default: <code>admin</code>
-  - <code>AWX_HOSTS_GROUP</code>, should store a name for the group of hosts that will contain the nodes that this playground should work with; default: <code>Managed hosts</code>
+  - <code>AWX_HOSTS_GROUP</code>, should store a name for the group of hosts that will contain the nodes that this playground should work with; default: <code>Managed_hosts</code>
   - <code>AWX_INVENTORY</code>, should store a name for the AWX Inventory that will store the nodes and group(s) used in this playground; default: <code>$AWX_ORG-inventory</code>
   - <code>AWX_PROJECT</code>, define where to look for Ansible playbooks; default: <code>Github</code>
   - <code>AWX_MANAGED_NODES_SSH_CREDS</code>, define a name for the SSH private key that should be used to access the managed nodes; default: <code>$AWX_ORG-NODES-SSH</code>

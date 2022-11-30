@@ -1,0 +1,12 @@
+---
+# handlers file for k8s-master
+- name: Reload sysctl
+  ansible.builtin.command:
+    cmd: sysctl --system
+
+- name: Restart Containerd
+  ansible.builtin.systemd:
+    daemon_reload: true
+    enabled: true
+    name: containerd
+    state: restarted

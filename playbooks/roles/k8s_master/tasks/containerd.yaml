@@ -1,0 +1,61 @@
+- name: Collections & Tests
+  block:
+    - name: Check if Containerd configuration file exists
+      ansible.builtin.stat:
+        path: /etc/containerd/config.toml
+      changed_when: false
+      register: config_toml
+
+    - name: Collect data from `lsmod`
+      ansible.builtin.command:
+        cmd: lsmod
+      changed_when: false
+      ignore_errors: true
+      register: lsmod
+
+- name: Install packages
+  ansible.builtin.package:
+    name:
+      - containerd
+    state: present
+
+- name: Load kernel module if needed
+  ansible.builtin.command:
+    cmd: "modprobe {{ item }}"
+  loop: "{{ kernel_modules }}"
+  when: "lsmod.stdout.find(item) == -1"
+
+- name: Maintain /etc/modules-load.d/containerd.conf
+  ansible.builtin.lineinfile:
+    create: true
+    line: "{{ item }}"
+    mode: 0644
+    path: /etc/modules-load.d/containerd.conf
+    state: present
+  loop: "{{ kernel_modules }}"
+
+- name: Create Containerd directory
+  ansible.builtin.file:
+    mode: 0755
+    path: /etc/containerd
+    state: directory
+
+- name: Containerd configuration
+  when: "not config_toml.stat.exists or containerd_force_update | bool"
+  block:
+    - name: Set Containerd default configuration
+      ansible.builtin.shell:
+        cmd: "containerd config default > /etc/containerd/config.toml"
+      changed_when: true
+
+    - name: Get SystemD status
+      ansible.builtin.lineinfile:
+        backrefs: true
+        line: \g<1>SystemdCgroup = true
+        path: /etc/containerd/config.toml
+        regexp: '^(.*)SystemdCgroup = false'
+        state: present
+      notify: Restart Containerd
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

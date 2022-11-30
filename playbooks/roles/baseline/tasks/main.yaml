@@ -1,0 +1,16 @@
+---
+# tasks file for baseline
+- name: Install packages
+  ansible.builtin.package:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - containerd
+      - curl
+      - git
+      - golang
+      - jq
+      - software-properties-common
+      - vim
+      - wget
+    state: present

@@ -1,0 +1,16 @@
+galaxy_info:
+  author: Yehonatan Devorkin
+  description: This role should prepare all of the nodes and bring them to the same baseline
+  company: Devorkin.net
+
+  license: license (MIT)
+  min_ansible_version: '2.1'
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+
+  galaxy_tags: []
+
+dependencies: []

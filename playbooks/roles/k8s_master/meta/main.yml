@@ -1,0 +1,16 @@
+galaxy_info:
+  author: Yehonatan Devorkin
+  description: Install Kubernetes cluster -- master node (k8s-master)
+  company: Devorkin.net
+
+  license: license (MIT)
+  min_ansible_version: '2.1'
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+
+  galaxy_tags: []
+
+dependencies: []

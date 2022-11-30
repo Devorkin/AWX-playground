@@ -1,0 +1,7 @@
+- name: Baseline playbook
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Baseline role
+      ansible.builtin.include_role:
+        name: baseline

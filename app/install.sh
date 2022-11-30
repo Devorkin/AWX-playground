@@ -87,6 +87,7 @@ sed -i "s|^# awx_official=false$|awx_official=true|" ${CONFIG_FILE}
 sed -i "s|^create_preload_data=True|create_preload_data=False|" ${CONFIG_FILE}
 sed -i "s|^docker_compose_dir=\".*\"$|docker_compose_dir=${PROJECT_DIR}/.awxcompose|" ${CONFIG_FILE}
 sed -i "s|^host_port=.*$|host_port=${HOST_PORT}|" ${CONFIG_FILE}
+sed -i "s|^#project_data_dir|project_data_dir|" ${CONFIG_FILE}
 if [[ ${MODE} == 'EXTERNAL_DB' ]]; then
     sed -i "s|^# pg_hostname=postgresql$|pg_hostname=${PG_HOST}|" ${CONFIG_FILE}
 fi
@@ -115,10 +116,15 @@ awx credentials create --name $AWX_SVC_SSH_CREDS --credential_type 'Source Contr
 SSH_CREDS_ID=$(awx credentials list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep $AWX_MANAGED_NODES_SSH_CREDS | sed -En 's/^"([0-9]+) --.*"$/\1/p')
 SCM_CREDS_ID=$(awx credentials list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep $AWX_SVC_SSH_CREDS | sed -En 's/^"([0-9]+) --.*"$/\1/p')
 
+awx project create --name LOCAL-TESTING --local_path LOCAL-TESTING --organization $AWX_ORG
 awx project create --name $AWX_PROJECT --monitor --wait --organization $AWX_ORG --scm_type git --scm_url ${SCM_REPO_URL} --credential ${SCM_CREDS_ID}
-awx job_templates create --name "[Test] $AWX_ORG job template" --project $AWX_PROJECT --playbook 'playbooks/test.yml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
-rv=$(awx job_templates list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep "\[Test\] $AWX_ORG job template" | sed -En 's/"([0-9]+) --.*"$/\1/p')
-awx job_templates associate ${rv} --credential $SSH_CREDS_ID
+
+awx job_templates create --name "[Test] $AWX_ORG job template" --project $AWX_PROJECT --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+awx job_templates create --name "[Test] $AWX_ORG LOCAL job template" --project LOCAL-TESTING --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+for ID in $(awx job_templates list | jq '.results[].id')
+do
+    awx job_templates associate ${ID} --credential $SSH_CREDS_ID
+done
 if [ ! -z "$1" ]; then
     for (( i=1; i<=$1; i++ )); do
         awx host create --name guest${i}.tests.net --inventory $AWX_INVENTORY --enabled true --variables "{\"ansible_user\": \"vagrant\", \"ansible_host\": \"guest${i}.tests.net\"}"

@@ -1,0 +1,13 @@
+---
+# vars file for k8s-master
+calico_override: false
+calico_custom_resources_yaml: "/opt/k8s/custom_resources/calico/custom-resources.yaml"
+containerd_force_update: false
+go_modules: ["github.com/brancz/gojsontoyaml", "github.com/google/go-jsonnet/cmd/jsonnet", "github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb"]
+k8s_pods_network_cidr: '10.100.100.0/24'
+kernel_modules: ['br_netfilter', 'overlay']
+kubernetes_app_version: 1.24.7-00
+kubernetes_apps: ['containerd', 'kubeadm', 'kubectl', 'kubelet']
+prometheus_files: ['build.sh', 'example.jsonnet']
+prometheus_jsonnet_path: '/opt/k8s/custom_resources/prometheus-jsonnet'
+sysctl_lines: ['net.bridge.bridge-nf-call-ip6tables = 1', 'net.bridge.bridge-nf-call-iptables = 1', 'net.ipv4.ip_forward = 1']

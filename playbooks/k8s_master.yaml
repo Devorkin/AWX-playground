@@ -1,0 +1,11 @@
+- name: K8s_master playbook
+  hosts: guest1.tests.net
+  gather_facts: true
+  tasks:
+    - name: Prepare to baseline
+      ansible.builtin.include_role:
+        name: baseline
+
+    - name: Configure Kubernetes master role
+      ansible.builtin.include_role:
+        name: k8s_master

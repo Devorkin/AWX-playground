@@ -1,0 +1,13 @@
+---
+# tasks file for k8s-master
+- name: Configure Containerd
+  ansible.builtin.import_tasks: containerd.yaml
+
+- name: Install Kubernetes with the Master role
+  ansible.builtin.import_tasks: kubernetes.yaml
+
+- name: Setup Kubernetes networking
+  ansible.builtin.import_tasks: network.yaml
+
+- name: Setup Kube-Prometheus
+  ansible.builtin.import_tasks: prometheus.yaml

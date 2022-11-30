@@ -1,4 +1,5 @@
-ansible==4.9.0
+ansible==5.9.0
+ansible-lint
 awxkit
 docker
 docker-compose
