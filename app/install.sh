@@ -67,6 +67,7 @@ check_dependecies() {
 
 check_dependecies
 pip3 install -r requirements.txt
+mkdir /var/lib/awx/projects/LOCAL-TESTING
 
 # PostgreSQL setup [Optional]
 if [[ ${MODE} == 'EXTERNAL_DB' ]]; then
@@ -108,26 +109,50 @@ make clean html
 echo "Creating AWX initial configuration for $AWX_ORG environment..."
 awx organizations create --name $AWX_ORG
 awx inventory create --name $AWX_INVENTORY --organization $AWX_ORG
+
 awx groups create --name $AWX_HOSTS_GROUP --inventory $AWX_INVENTORY
+awx groups create --name K8s_master  --inventory $AWX_INVENTORY
+awx groups create --name K8s_worker_nodes --inventory $AWX_INVENTORY
+
 awx credentials create --name $AWX_MANAGED_NODES_SSH_CREDS --credential_type 'Machine' --organization $AWX_ORG --inputs "{\"username\": \"${SSH_USER}\", \"become_method\": \"sudo\", \"ssh_key_data\": \"@${SSH_PRIVATE_KEY_PATH}\"}"
 awx credentials create --name $AWX_SVC_SSH_CREDS --credential_type 'Source Control' --organization $AWX_ORG --inputs "{\"username\": \"${SCM_USER}\", \"ssh_key_data\": \"@${SCM_SSH_PRIVATE_KEY_PATH}\"}"
 
 # Retrieve the Credential ID created above - to use it also for SCM
-SSH_CREDS_ID=$(awx credentials list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep $AWX_MANAGED_NODES_SSH_CREDS | sed -En 's/^"([0-9]+) --.*"$/\1/p')
-SCM_CREDS_ID=$(awx credentials list | jq '.results[] | (.id|tostring) + " -- " + .name' | grep $AWX_SVC_SSH_CREDS | sed -En 's/^"([0-9]+) --.*"$/\1/p')
+SSH_CREDS_ID=$(awx credentials list -f human | grep $AWX_MANAGED_NODES_SSH_CREDS | awk '{print $1}')
+SCM_CREDS_ID=$(awx credentials list -f human | grep $AWX_SVC_SSH_CREDS | awk '{print $1}')
 
 awx project create --name LOCAL-TESTING --local_path LOCAL-TESTING --organization $AWX_ORG
 awx project create --name $AWX_PROJECT --monitor --wait --organization $AWX_ORG --scm_type git --scm_url ${SCM_REPO_URL} --credential ${SCM_CREDS_ID}
 
 awx job_templates create --name "[Test] $AWX_ORG job template" --project $AWX_PROJECT --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
 awx job_templates create --name "[Test] $AWX_ORG LOCAL job template" --project LOCAL-TESTING --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+awx job_templates create --name "[K8s] Master node" --project $AWX_PROJECT --playbook 'playbooks/k8s_master.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
 for ID in $(awx job_templates list | jq '.results[].id')
 do
     awx job_templates associate ${ID} --credential $SSH_CREDS_ID
 done
 if [ ! -z "$1" ]; then
     for (( i=1; i<=$1; i++ )); do
-        awx host create --name guest${i}.tests.net --inventory $AWX_INVENTORY --enabled true --variables "{\"ansible_user\": \"vagrant\", \"ansible_host\": \"guest${i}.tests.net\"}"
+        if [ $i == 1 ]; then
+            # Prepare the 1st node for acting as Kubernetes master node
+            GROUP_ID=$(awx groups list -f human | grep K8s_master | awk "{print \$1}")
+            awx host create --name guest${i}.tests.net --inventory $AWX_INVENTORY --enabled true --variables "{\"ansible_user\": \"vagrant\", \"ansible_host\": \"guest${i}.tests.net\"}"
+            curl \
+                -H 'Content-Type: application/json' \
+                --user $ADMIN_USER:$ADMIN_PASSWORD \
+                $APIBASEURL/groups/${GROUP_ID}/hosts/ \
+                --data """
+{
+    \"name\": \"guest${i}.tests.net\",
+    \"description\": \"\",
+    \"enabled\": true,
+    \"instance_id\": \"\",
+    \"variables\": \"\"
+}
+"""
+        else
+            awx host create --name guest${i}.tests.net --inventory $AWX_INVENTORY --enabled true --variables "{\"ansible_user\": \"vagrant\", \"ansible_host\": \"guest${i}.tests.net\"}"
+        fi
     done
 fi
 
