@@ -67,7 +67,6 @@ check_dependecies() {
 
 check_dependecies
 pip3 install -r requirements.txt
-mkdir /var/lib/awx/projects/LOCAL-TESTING
 
 # PostgreSQL setup [Optional]
 if [[ ${MODE} == 'EXTERNAL_DB' ]]; then
@@ -97,6 +96,7 @@ sed -i "s|^postgres_data_dir=\".*\"$|postgres_data_dir=${PROJECT_DIR}/postgres_l
 
 cd ./awx/installer
 ansible-playbook -i inventory install.yml
+mkdir /var/lib/awx/projects/LOCAL-TESTING
 
 export TOWER_HOST=http://127.0.0.1:$HOST_PORT
 export TOWER_USERNAME=$ADMIN_USER
