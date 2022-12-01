@@ -1,0 +1,13 @@
+---
+# tasks file for k8s_master_role
+- name: Initialize cluster
+  ansible.builtin.import_tasks: Initialize_cluster.yaml
+
+- name: Setup Kubernetes networking
+  ansible.builtin.import_tasks: network.yaml
+
+- name: Setup Kube-Prometheus
+  ansible.builtin.import_tasks: prometheus.yaml
+
+- name: Fetch Kubernetes cluster token
+  ansible.builtin.import_tasks: kubernetes_token.yaml

@@ -1,0 +1,15 @@
+---
+- name: Get Kubernetes cluster join token
+  block:
+    - name: Fetch cluster token
+      ansible.builtin.command:
+        cmd: kubeadm token create --print-join-command
+      changed_when: true
+      register: cluster_token
+
+    - name: Store cluster token locally (AWX server)
+      ansible.builtin.copy:
+        content: "{{ cluster_token.stdout_lines[0] }}"
+        dest: /opt/awx/place_holder/k8s_join_token.sh
+        mode: 0600
+      delegate_to: localhost

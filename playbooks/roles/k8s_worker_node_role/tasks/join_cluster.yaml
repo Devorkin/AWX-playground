@@ -1,0 +1,32 @@
+- name: Collections & Tests
+  block:
+    - name: Check if Kubeadm exists
+      ansible.builtin.stat:
+        path: /usr/bin/kubeadm
+      changed_when: false
+      register: kubeadm_existance
+
+- name: Create placeholder directory
+  ansible.builtin.file:
+    mode: 0755
+    path: /opt/awx/place_holder
+    state: directory
+
+- name: Fetch cluster join token
+  ansible.builtin.copy:
+    src: /opt/awx/place_holder/k8s_join_token.sh
+    dest: /opt/awx/place_holder/k8s_join_token.sh
+    mode: 0600
+
+- name: Join to the cluster
+  ansible.builtin.command:
+    cmd: bash /opt/awx/place_holder/k8s_join_token.sh
+  register: cluster_join
+
+- name: STDOUT Debug
+  ansible.builtin.debug:
+    msg: "{{ cluster_join.stdout }}"
+
+- name: STDERR Debug
+  ansible.builtin.debug:
+    msg: "{{ cluster_join.stderr }}"

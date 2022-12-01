@@ -1,5 +1,5 @@
 ---
-# handlers file for k8s-master
+# handlers file for k8s_setup_role
 - name: Reload sysctl
   ansible.builtin.command:
     cmd: sysctl --system

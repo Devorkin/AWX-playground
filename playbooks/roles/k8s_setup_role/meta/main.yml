@@ -1,6 +1,6 @@
 galaxy_info:
   author: Yehonatan Devorkin
-  description: Install Kubernetes cluster -- master node (k8s-master)
+  description: Setup Kubernetes cluster
   company: Devorkin.net
 
   license: license (MIT)

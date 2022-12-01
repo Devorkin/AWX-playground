@@ -1,0 +1,15 @@
+- name: K8s_worker_node_role playbook
+  hosts: K8s_worker_nodes
+  gather_facts: true
+  tasks:
+    - name: Prepare to baseline
+      ansible.builtin.include_role:
+        name: baseline
+
+    - name: Setup Kubernetes
+      ansible.builtin.include_role:
+        name: k8s_setup_role
+
+    - name: Configure Kubernetes worker node role
+      ansible.builtin.include_role:
+        name: k8s_worker_node_role

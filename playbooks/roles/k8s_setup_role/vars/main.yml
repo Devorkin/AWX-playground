@@ -1,0 +1,6 @@
+---
+# vars file for k8s_setup_role
+kernel_modules: ['br_netfilter', 'overlay']
+kubernetes_app_version: 1.24.7-00
+kubernetes_apps: ['containerd', 'kubeadm', 'kubectl', 'kubelet']
+sysctl_lines: ['net.bridge.bridge-nf-call-ip6tables = 1', 'net.bridge.bridge-nf-call-iptables = 1', 'net.ipv4.ip_forward = 1']

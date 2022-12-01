@@ -4,45 +4,6 @@
     path: /
     letters: ['t', 'e', 's', 'T']
   tasks:
-    # - name: Ping my hosts
-    #   ansible.builtin.ping:
-    # - name: Print message
-    #   ansible.builtin.debug:
-    #     msg: Hello world
-    # - name: Print specific fact
-      # ansible.builtin.debug:
-        # var: ansible_mounts
-        # var: " {{ ansible_mounts }} "
-        # msg: "{{ letters }}"
-    # - name: Ensure that free space on {{ '/' }} is grater than 30%
-    #   ansible.builtin.assert:
-    #     that: mount.size_available > mount.size_total|float * 9.0
-    #     msg: disk space has reached 70% threshold
-    #   vars:
-    #     mount: "{{ ansible_mounts | selectattr('mount','equalto', '/' ) | list | first }}"
-    # - name: Test num
-    #   ansible.builtin.debug:
-    #     msg: "{{ 41555521536|float }}"
-    # - name: Set Fact
-    #   set_fact:
-    #     string_to_fact: "This is my fact"
-    # - name: Print custom fact
-    #   ansible.builtin.debug:
-    #     msg: " {{ string_to_fact }}"
     - name: Print facts
       ansible.builtin.debug:
         var: ansible_facts
-    # - name: Check for Overlay kernel module
-    #   ansible.builtin.shell:
-    #     lsmod
-    # - name: Show output
-    #   ansible.builtin.debug:
-    #     var: kernel_overlay_status.stdout_lines
-    # - name: Assert Overlay
-    #   ansible.builtin.assert:
-    #     that: "'overlay' in {{ kernel_overlay_status.stdout_lines }}"
-    #     success_msg: "Success"
-    #     fail_msg: "Fail"
-    # - ansible.builtin.set_fact:
-    #     "one_fact": "TEST"
-    #     cacheable: true

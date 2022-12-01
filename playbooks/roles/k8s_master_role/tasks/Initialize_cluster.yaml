@@ -29,51 +29,12 @@
         state: directory
       when: "etc_passwd.stdout.find('vagrant') != -1"
 
-- name: Install Google repo
-  block:
-    - name: Install Google-GPG-key
-      ansible.builtin.apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-        state: present
-    - name: Install Google-repo
-      ansible.builtin.apt_repository:
-        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
-        state: present
-
-- name: Install packages
-  ansible.builtin.package:
-    name:
-      - gnupg2
-      - "kubeadm={{ kubernetes_app_version }}"
-      - "kubectl={{ kubernetes_app_version }}"
-      - "kubelet={{ kubernetes_app_version }}"
-    state: present
-
-- name: APT hold packages
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  loop: "{{ kubernetes_apps }}"
-
-- name: Create Kubernetes Sysctl configuration file
-  ansible.builtin.lineinfile:
-    create: true
-    line: "{{ item }}"
-    mode: 0644
-    path: /etc/sysctl.d/99-kubernetes.conf
-    state: present
-  loop: "{{ sysctl_lines }}"
-  notify: Reload sysctl
-
-- name: Flush handlers
-  ansible.builtin.meta: flush_handlers
-  
-- name: Check for kubeadm certificates status
-  ansible.builtin.command:
-    cmd: kubeadm certs check-expiration
-  changed_when: false
-  ignore_errors: true
-  register: certs_status
+    - name: Check for kubeadm certificates status
+      ansible.builtin.command:
+        cmd: kubeadm certs check-expiration
+      changed_when: false
+      ignore_errors: true
+      register: certs_status
 
 - name: Init Kubernetes cluster
   when: "certs_status.stdout.find('MISSING') != -1"

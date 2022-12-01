@@ -41,7 +41,7 @@
     state: directory
 
 - name: Containerd configuration
-  when: "not config_toml.stat.exists or containerd_force_update | bool"
+  when: "not config_toml.stat.exists"
   block:
     - name: Set Containerd default configuration
       ansible.builtin.shell:

@@ -1,4 +1,4 @@
-- name: K8s_master playbook
+- name: K8s_master_role playbook
   hosts: K8s_master
   gather_facts: true
   tasks:
@@ -6,6 +6,10 @@
       ansible.builtin.include_role:
         name: baseline
 
+    - name: Setup Kubernetes
+      ansible.builtin.include_role:
+        name: k8s_setup_role
+
     - name: Configure Kubernetes master role
       ansible.builtin.include_role:
-        name: k8s_master
+        name: k8s_master_role

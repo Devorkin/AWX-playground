@@ -96,7 +96,9 @@ sed -i "s|^postgres_data_dir=\".*\"$|postgres_data_dir=${PROJECT_DIR}/postgres_l
 
 cd ./awx/installer
 ansible-playbook -i inventory install.yml
-mkdir /var/lib/awx/projects/LOCAL-TESTING
+mkdir -p /var/lib/awx/projects/LOCAL-TESTING/playbooks
+mkdir -p /opt/awx/place_holder
+cp /vagrant/playbooks/test.yaml /var/lib/awx/projects/LOCAL-TESTING/playbooks/
 
 export TOWER_HOST=http://127.0.0.1:$HOST_PORT
 export TOWER_USERNAME=$ADMIN_USER
@@ -117,6 +119,8 @@ awx groups create --name K8s_worker_nodes --inventory $AWX_INVENTORY
 awx credentials create --name $AWX_MANAGED_NODES_SSH_CREDS --credential_type 'Machine' --organization $AWX_ORG --inputs "{\"username\": \"${SSH_USER}\", \"become_method\": \"sudo\", \"ssh_key_data\": \"@${SSH_PRIVATE_KEY_PATH}\"}"
 awx credentials create --name $AWX_SVC_SSH_CREDS --credential_type 'Source Control' --organization $AWX_ORG --inputs "{\"username\": \"${SCM_USER}\", \"ssh_key_data\": \"@${SCM_SSH_PRIVATE_KEY_PATH}\"}"
 
+K8S_MASTER_GROUP_ID=$(awx groups list -f human | grep K8s_master | awk "{print \$1}")
+K8S_NODE_GROUP_ID=$(awx groups list -f human | grep K8s_worker_nodes | awk "{print \$1}")
 # Retrieve the Credential ID created above - to use it also for SCM
 SSH_CREDS_ID=$(awx credentials list -f human | grep $AWX_MANAGED_NODES_SSH_CREDS | awk '{print $1}')
 SCM_CREDS_ID=$(awx credentials list -f human | grep $AWX_SVC_SSH_CREDS | awk '{print $1}')
@@ -126,7 +130,8 @@ awx project create --name $AWX_PROJECT --monitor --wait --organization $AWX_ORG 
 
 awx job_templates create --name "[Test] $AWX_ORG job template" --project $AWX_PROJECT --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
 awx job_templates create --name "[Test] $AWX_ORG LOCAL job template" --project LOCAL-TESTING --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
-awx job_templates create --name "[K8s] Master node" --project $AWX_PROJECT --playbook 'playbooks/k8s_master.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+awx job_templates create --name "[K8s] Master node" --project $AWX_PROJECT --playbook 'playbooks/k8s_master_role.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+awx job_templates create --name "[K8s] Worker nodes" --project $AWX_PROJECT --playbook 'playbooks/k8s_worker_node.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
 for ID in $(awx job_templates list | jq '.results[].id')
 do
     awx job_templates associate ${ID} --credential $SSH_CREDS_ID
@@ -135,12 +140,11 @@ if [ ! -z "$1" ]; then
     for (( i=1; i<=$1; i++ )); do
         if [ $i == 1 ]; then
             # Prepare the 1st node for acting as Kubernetes master node
-            GROUP_ID=$(awx groups list -f human | grep K8s_master | awk "{print \$1}")
             awx host create --name guest${i}.tests.net --inventory $AWX_INVENTORY --enabled true --variables "{\"ansible_user\": \"vagrant\", \"ansible_host\": \"guest${i}.tests.net\"}"
             curl \
                 -H 'Content-Type: application/json' \
                 --user $ADMIN_USER:$ADMIN_PASSWORD \
-                $APIBASEURL/groups/${GROUP_ID}/hosts/ \
+                $APIBASEURL/groups/${K8S_MASTER_GROUP_ID}/hosts/ \
                 --data """
 {
     \"name\": \"guest${i}.tests.net\",
@@ -152,6 +156,19 @@ if [ ! -z "$1" ]; then
 """
         else
             awx host create --name guest${i}.tests.net --inventory $AWX_INVENTORY --enabled true --variables "{\"ansible_user\": \"vagrant\", \"ansible_host\": \"guest${i}.tests.net\"}"
+                        curl \
+                -H 'Content-Type: application/json' \
+                --user $ADMIN_USER:$ADMIN_PASSWORD \
+                $APIBASEURL/groups/${K8S_NODE_GROUP_ID}/hosts/ \
+                --data """
+{
+    \"name\": \"guest${i}.tests.net\",
+    \"description\": \"\",
+    \"enabled\": true,
+    \"instance_id\": \"\",
+    \"variables\": \"\"
+}
+"""
         fi
     done
 fi

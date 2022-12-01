@@ -1,0 +1,4 @@
+---
+# tasks file for k8s_worker_node_role
+- name: Initialize cluster
+  ansible.builtin.import_tasks: join_cluster.yaml
