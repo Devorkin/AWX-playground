@@ -1,5 +1,5 @@
 - name: K8s_master playbook
-  hosts: guest1.tests.net
+  hosts: K8s_master
   gather_facts: true
   tasks:
     - name: Prepare to baseline
