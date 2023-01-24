@@ -1,0 +1,10 @@
+- name: Install Google repo
+  block:
+    - name: Install Google-GPG-key
+      ansible.builtin.apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+    - name: Install Google-repo
+      ansible.builtin.apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        state: present

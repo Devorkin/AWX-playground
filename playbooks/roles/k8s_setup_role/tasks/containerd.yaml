@@ -16,8 +16,15 @@
 - name: Install packages
   ansible.builtin.package:
     name:
-      - containerd
+      - "containerd={{ containerd_version }}"
+      - "cri-tools={{ cri_tools_version }}"
     state: present
+
+- name: APT hold packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: "{{ containerd_apps }}"
 
 - name: Load kernel module if needed
   ansible.builtin.command:

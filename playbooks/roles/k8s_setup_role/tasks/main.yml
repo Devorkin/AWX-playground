@@ -1,5 +1,8 @@
 ---
 # tasks file for k8s_setup_role
+- name: APT repositories
+  ansible.builtin.import_tasks: repositories.yaml
+
 - name: Configure Containerd
   ansible.builtin.import_tasks: containerd.yaml
 
