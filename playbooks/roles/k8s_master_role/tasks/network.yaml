@@ -25,7 +25,7 @@
   block:
     - name: Launch Tigera operator pod
       ansible.builtin.command:
-        cmd: kubectl create -f https://projectcalico.docs.tigera.io/manifests/tigera-operator.yaml
+        cmd: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/tigera-operator.yaml
       when: "tigera_pod.stdout.find('tigera-operator') == -1"
     - name: Create Calico directory
       ansible.builtin.file:
@@ -36,7 +36,7 @@
       ansible.builtin.get_url:
         dest: "{{ calico_custom_resources_yaml }}"
         mode: 0644
-        url: https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
+        url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/custom-resources.yaml
     - name: Update CIDR subnet in Calico custom resources configuration file
       ansible.builtin.lineinfile:
         backrefs: true
