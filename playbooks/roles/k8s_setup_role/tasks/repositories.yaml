@@ -6,9 +6,6 @@
         return_content: true
         url: https://cdn.dl.k8s.io/release/stable.txt
       register: url_result
-    # - name: Print
-    #   ansible.builtin.debug:
-    #     msg: "{{ url_result.content.split('.')[0:2] | join('.') }}"
 
 - name: Install Google repo
   block:
@@ -17,18 +14,9 @@
         url: "https://pkgs.k8s.io/core:/stable:/{{ url_result.content.split('.')[0:2] | join('.') }}/deb/Release.key"
         dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
         mode: '0644'
-        # force: true
 
     - name: Add Kubernetes APT repository
       apt_repository:
         repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/{{ url_result.content.split('.')[0:2] | join('.') }}/deb/ /"
         state: present
         update_cache: yes
-    # - name: Install Google-GPG-key
-    #   ansible.builtin.apt_key:
-    #     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-    #     state: present
-    # - name: Install Google-repo
-    #   ansible.builtin.apt_repository:
-    #     repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
-    #     state: present
