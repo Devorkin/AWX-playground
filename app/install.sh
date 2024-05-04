@@ -127,9 +127,12 @@ SCM_CREDS_ID=$(awx credentials list -f human | grep $AWX_SVC_SSH_CREDS | awk '{p
 
 awx project create --name LOCAL-TESTING --local_path LOCAL-TESTING --organization $AWX_ORG
 awx project create --name $AWX_PROJECT --monitor --wait --organization $AWX_ORG --scm_type git --scm_url ${SCM_REPO_URL} --credential ${SCM_CREDS_ID}
+awx project create --name $AWX_PROJECT-Development --monitor --wait --organization $AWX_ORG --scm_type git --scm_url ${SCM_REPO_URL} --credential ${SCM_CREDS_ID} --scm_branch develop
 
-awx job_templates create --name "[Test] $AWX_ORG job template" --project $AWX_PROJECT --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+awx job_templates create --name "[Test] [K8s] Master node" --project $AWX_PROJECT-Development --playbook 'playbooks/k8s_master_role.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+awx job_templates create --name "[Test] [K8s] Worker nodes" --project $AWX_PROJECT-Development --playbook 'playbooks/k8s_worker_node.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
 awx job_templates create --name "[Test] $AWX_ORG LOCAL job template" --project LOCAL-TESTING --playbook 'playbooks/test.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
+
 awx job_templates create --name "[K8s] Master node" --project $AWX_PROJECT --playbook 'playbooks/k8s_master_role.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
 awx job_templates create --name "[K8s] Worker nodes" --project $AWX_PROJECT --playbook 'playbooks/k8s_worker_node.yaml' --job_type run --inventory $AWX_INVENTORY --become_enabled true --allow_simultaneous true
 for ID in $(awx job_templates list | jq '.results[].id')

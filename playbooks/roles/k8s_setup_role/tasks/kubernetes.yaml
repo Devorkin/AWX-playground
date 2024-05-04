@@ -2,10 +2,14 @@
   ansible.builtin.package:
     name:
       - gnupg2
-      - "kubeadm={{ kubernetes_app_version }}"
-      - "kubectl={{ kubernetes_app_version }}"
-      - "kubelet={{ kubernetes_app_version }}"
+      - "kubeadm"
+      - "kubectl"
+      - "kubelet"
     state: present
+    # "kubeadm={{ kubernetes_app_version }}"
+    # "kubectl={{ kubernetes_app_version }}"
+    # "kubelet={{ kubernetes_app_version }}"
+
 
 - name: APT hold packages
   ansible.builtin.dpkg_selections:

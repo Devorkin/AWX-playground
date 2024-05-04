@@ -16,9 +16,12 @@
 - name: Install packages
   ansible.builtin.package:
     name:
-      - "containerd={{ containerd_version }}"
-      - "cri-tools={{ cri_tools_version }}"
+      - "containerd"
+      - "cri-tools"
     state: present
+    # "containerd={{ containerd_version }}"
+    # "cri-tools={{ cri_tools_version }}"
+
 
 - name: APT hold packages
   ansible.builtin.dpkg_selections:
