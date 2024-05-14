@@ -61,12 +61,23 @@
     mode: 0640
     src: /etc/kubernetes/admin.conf
     remote_src: true
+
 - name: Copy ClusterConfiguration to Vagrant home directory
   ansible.builtin.copy:
     dest: /home/vagrant/.kube/config
     group: vagrant
     mode: 0640
     owner: vagrant
+    src: /etc/kubernetes/admin.conf
+    remote_src: true
+  when: "etc_passwd.stdout.find('vagrant') != -1"
+
+- name: Copy ClusterConfiguration to Vagrant Shared files directory
+  ansible.builtin.copy:
+    dest: /vagrant/Shared_files/k8s-cluster-config
+    group: root
+    mode: 0644
+    owner: root
     src: /etc/kubernetes/admin.conf
     remote_src: true
   when: "etc_passwd.stdout.find('vagrant') != -1"
